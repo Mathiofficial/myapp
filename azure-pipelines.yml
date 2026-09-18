@@ -82,8 +82,7 @@ steps:
 
       sudo mkdir -p /tmp/azure-cicd-deploy/extracted
 
-      sudo tar -xzf /tmp/azure-cicd-deploy/website-package.tar.gz \
-        -C /tmp/azure-cicd-deploy/extracted
+      sudo tar -xzf /tmp/azure-cicd-deploy/website-package.tar.gz -C /tmp/azure-cicd-deploy/extracted
 
       sudo cp /tmp/azure-cicd-deploy/extracted/index.html /var/www/html/index.html
 
