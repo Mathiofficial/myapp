@@ -6,8 +6,11 @@ pool:
 
 steps:
 
-- script: echo "Hello from Azure Pipeline!"
-  displayName: "Test Pipeline"
+- script: |
+    echo "Running application tests..."
+    chmod +x test.sh
+    ./test.sh
+  displayName: "Run Automated Tests"
 
 - task: CopyFilesOverSSH@0
   displayName: "Copy application to Azure VM"
