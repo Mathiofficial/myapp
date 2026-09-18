@@ -9,13 +9,24 @@ steps:
 - script: echo "Hello from Azure Pipeline!"
   displayName: "Test Pipeline"
 
+- task: CopyFilesOverSSH@0
+  displayName: "Copy application to Azure VM"
+  inputs:
+    sshEndpoint: 'azure-vm-ssh'
+    sourceFolder: '$(Build.SourcesDirectory)'
+    contents: 'index.html'
+    targetFolder: '/tmp/azure-cicd-deploy'
+    overwrite: true
+
 - task: SSH@0
-  displayName: "Deploy to Azure VM"
+  displayName: "Deploy application to Azure VM"
   inputs:
     sshEndpoint: 'azure-vm-ssh'
     runOptions: 'commands'
     commands: |
       echo "Connected to Azure VM"
-      echo "Deployment started"
-      hostname
-      sudo systemctl status nginx --no-pager
+      echo "Deploying application..."
+      sudo cp /tmp/azure-cicd-deploy/index.html /var/www/html/index.html
+      sudo systemctl restart nginx
+      echo "Deployment completed successfully"
+      sudo systemctl is-active nginx
