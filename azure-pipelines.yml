@@ -5,5 +5,17 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+
 - script: echo "Hello from Azure Pipeline!"
   displayName: "Test Pipeline"
+
+- task: SSH@0
+  displayName: "Deploy to Azure VM"
+  inputs:
+    sshEndpoint: 'azure-vm-ssh'
+    runOptions: 'commands'
+    commands: |
+      echo "Connected to Azure VM"
+      echo "Deployment started"
+      hostname
+      sudo systemctl status nginx --no-pager
