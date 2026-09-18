@@ -6,30 +6,88 @@ pool:
 
 steps:
 
+# -------------------------
+# 1. Automated Testing
+# -------------------------
 - script: |
     echo "Running application tests..."
     chmod +x test.sh
     ./test.sh
   displayName: "Run Automated Tests"
 
+
+# -------------------------
+# 2. Build Application
+# -------------------------
+- script: |
+    echo "Building application..."
+
+    mkdir -p build
+
+    cp index.html build/index.html
+
+    echo "Build completed successfully"
+    ls -la build
+  displayName: "Build Application"
+
+
+# -------------------------
+# 3. Create Artifact
+# -------------------------
+- task: ArchiveFiles@2
+  displayName: "Create Build Artifact"
+  inputs:
+    rootFolderOrFile: 'build'
+    includeRootFolder: false
+    archiveType: 'tar'
+    tarCompression: 'gz'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/website-package.tar.gz'
+    replaceExistingArchive: true
+
+
+# -------------------------
+# 4. Publish Artifact
+# -------------------------
+- task: PublishPipelineArtifact@1
+  displayName: "Publish Build Artifact"
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/website-package.tar.gz'
+    artifact: 'website-package'
+
+
+# -------------------------
+# 5. Copy Artifact to VM
+# -------------------------
 - task: CopyFilesOverSSH@0
-  displayName: "Copy application to Azure VM"
+  displayName: "Copy Artifact to Azure VM"
   inputs:
     sshEndpoint: 'azure-vm-ssh'
-    sourceFolder: '$(Build.SourcesDirectory)'
-    contents: 'index.html'
+    sourceFolder: '$(Build.ArtifactStagingDirectory)'
+    contents: 'website-package.tar.gz'
     targetFolder: '/tmp/azure-cicd-deploy'
     overwrite: true
 
+
+# -------------------------
+# 6. Deploy Artifact
+# -------------------------
 - task: SSH@0
-  displayName: "Deploy application to Azure VM"
+  displayName: "Deploy Application to Azure VM"
   inputs:
     sshEndpoint: 'azure-vm-ssh'
     runOptions: 'commands'
     commands: |
       echo "Connected to Azure VM"
-      echo "Deploying application..."
-      sudo cp /tmp/azure-cicd-deploy/index.html /var/www/html/index.html
+      echo "Deploying build artifact..."
+
+      sudo mkdir -p /tmp/azure-cicd-deploy/extracted
+
+      sudo tar -xzf /tmp/azure-cicd-deploy/website-package.tar.gz \
+        -C /tmp/azure-cicd-deploy/extracted
+
+      sudo cp /tmp/azure-cicd-deploy/extracted/index.html /var/www/html/index.html
+
       sudo systemctl restart nginx
+
       echo "Deployment completed successfully"
       sudo systemctl is-active nginx
