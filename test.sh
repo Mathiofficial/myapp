@@ -7,8 +7,8 @@ if [ ! -f index.html ]; then
     exit 1
 fi
 
-if ! grep -q "Azure CI/CD" index.html; then
-    echo "❌ Test failed: Expected text not found"
+if ! grep -q "My Azure CI/CD Pipeline is Working" index.html; then
+    echo "❌ Test failed: Expected heading not found"
     exit 1
 fi
 
